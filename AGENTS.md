@@ -6,6 +6,8 @@
 
 ### Important files
 
+- `README.md` — GitHub 项目入口，沿用 miniReact 的简洁结构：项目简介、在线体验、快速开始、构建与验证；标题使用 GitHub 仓库名，只保留必要接入配置，不混入本机目录编号、迁移记录或提交历史说明。
+
 - `src/config.ts`、`.env.example` — 模型配置、资源预算、ALLOWED_ORIGINS 与 SITE_CONFIG_FILE。
 - `src/site.config.json`、`src/siteConfig.ts` — 默认站点资料、外部文件校验、公开配置投影；外部 JSON 只读加载。
 - `src/app.ts` — CORS 白名单、配置接口、限流与 SSE。
