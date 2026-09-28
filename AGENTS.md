@@ -48,4 +48,4 @@
 
 - `/health` 返回 sceneActions 白名单；SSE ready 仅在 X-Scene-Actions=v1 时返回相同白名单，否则为空数组。发布后须检查该字段，旧版只有 replyProtocol 无法证明已部署场景动作；健康检查不证明真实模型已正确生成动作，仍需单独验证。询问操作能力时应明确说明支持的两项操作，实际动作仍要求本轮明确执行请求。
 
-- GitHub 远程为 `neo-jack/aiPet`，私有仓库、master 主分支；主分支以独立项目初始提交重建，旧历史保存在本机归档。上传默认仅 CI，部署需仓库变量 DEPLOY_ENABLED=true。
+- GitHub 远程为 `neo-jack/aiPet`，公开仓库、master 主分支；主分支以独立项目初始提交重建，旧历史保存在本机归档。上传默认仅 CI，部署需仓库变量 DEPLOY_ENABLED=true。
