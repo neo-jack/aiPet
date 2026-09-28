@@ -1,0 +1,81 @@
+{
+  "name": "@my-page/ai-pet",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./three": {
+      "types": "./dist/three.d.ts",
+      "import": "./dist/three.js"
+    },
+    "./protocol": {
+      "types": "./dist/replyFormat.d.ts",
+      "import": "./dist/replyFormat.js"
+    },
+    "./client": {
+      "types": "./dist/aiChat.d.ts",
+      "import": "./dist/aiChat.js"
+    },
+    "./site-cards": {
+      "types": "./dist/siteCards.d.ts",
+      "import": "./dist/siteCards.js"
+    },
+    "./style.css": "./dist/ai-pet.css"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.json",
+    "test": "node --test test/*.test.mjs",
+    "pack:release": "npm run build && npm pack --pack-destination ../../vendor"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.182.0",
+    "@react-three/fiber": "^9.0.0",
+    "@react-three/drei": "^10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "three": {
+      "optional": true
+    },
+    "@react-three/fiber": {
+      "optional": true
+    },
+    "@react-three/drei": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "vite": "^7.3.0",
+    "typescript": "^7.0.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@types/three": "^0.185.4",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "three": "^0.182.0",
+    "@react-three/fiber": "^9.4.0",
+    "@react-three/drei": "^10.7.7"
+  }
+}

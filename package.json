@@ -1,0 +1,29 @@
+{
+  "name": "3dai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --import tsx --watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "start": "node --env-file-if-exists=.env dist/server.js",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.1",
+    "@langchain/core": "1.2.11",
+    "@langchain/openai": "1.5.13",
+    "@my-page/ai-pet": "file:vendor/my-page-ai-pet-0.1.0.tgz",
+    "hono": "4.13.8",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "4.23.13",
+    "typescript": "7.0.2"
+  }
+}

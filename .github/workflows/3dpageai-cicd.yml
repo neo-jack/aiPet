@@ -1,0 +1,109 @@
+name: 3Dpageai CI/CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master, main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: 3dpageai-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Check and build AI and pet package
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Verify installable pet package
+        run: |
+          npm ci --prefix packages/ai-pet
+          npm run build --prefix packages/ai-pet
+          npm test --prefix packages/ai-pet
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Check production API image
+        run: |
+          docker build -t 3dai-check .
+          docker run --rm --memory=256m --read-only --cap-drop=ALL \
+            -e NODE_OPTIONS=--max-old-space-size=128 3dai-check \
+            node --input-type=module -e 'import { readConfig } from "./dist/config.js"; import { createChatStream } from "./dist/model.js"; if(createChatStream(readConfig())) process.exit(1);'
+          trap 'docker rm -f 3dai-runtime-check' EXIT
+          docker run -d --name 3dai-runtime-check --memory=256m --read-only --cap-drop=ALL \
+            -e NODE_OPTIONS=--max-old-space-size=128 3dai-check
+          for attempt in $(seq 1 15); do
+            if docker exec 3dai-runtime-check node -e 'fetch("http://127.0.0.1:3001/health").then(r=>r.json()).then(x=>process.exit(x.status === "ok" && !x.chatConfigured ? 0 : 1)).catch(()=>process.exit(1))'; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+
+      - name: Verify split deployment
+        working-directory: .
+        run: |
+          bash -n .github/deploy/deploy.sh
+          node --test .github/deploy/deploy.test.mjs
+
+  deploy:
+    name: Publish and deploy only this project
+    needs: build
+    if: vars.DEPLOY_ENABLED == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check server configuration
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+        run: |
+          for name in SERVER_HOST SERVER_USER SERVER_PASSWORD; do
+            test -n "${!name}" || { echo "::error::Missing repository secret: $name"; exit 1; }
+          done
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish image
+        id: image
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/my-page-ai"
+          docker build --file Dockerfile --tag "$image:$GITHUB_SHA" --tag "$image:latest" .
+          docker push "$image:$GITHUB_SHA"
+          docker push "$image:latest"
+          echo "ref=$image:$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+      - name: Deploy with project-scoped rollback
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_IMAGE: ${{ steps.image.outputs.ref }}
+          DEPLOY_COMPONENT: ai
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: '22'
+          timeout: 30s
+          command_timeout: 30m
+          envs: GHCR_USER,GHCR_TOKEN,DEPLOY_IMAGE,DEPLOY_COMPONENT
+          script_path: .github/deploy/deploy.sh

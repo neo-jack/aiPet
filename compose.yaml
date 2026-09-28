@@ -1,0 +1,25 @@
+services:
+  ai-api:
+    build: .
+    init: true
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3001
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=128
+    ports:
+      - '127.0.0.1:3001:3001'
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: '5m'
+        max-file: '2'
