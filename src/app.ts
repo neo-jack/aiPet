@@ -13,15 +13,25 @@ import type { ChatStream } from './chat.js';
 import type { Config } from './config.js';
 import { REPLY_PROTOCOL, ReplyFormatError, SCENE_ACTIONS } from './replyFormat.js';
 
+function requestOrigin(url: string, forwardedHost: string | undefined, forwardedProto: string | undefined) {
+  const host = forwardedHost?.split(',')[0]?.trim();
+  const protocol = forwardedProto?.split(',')[0]?.trim().replace(/:$/, '').toLowerCase();
+  // The AI container is reached through the site reverse proxy. Use its
+  // forwarded public origin when present; local/direct requests use the URL.
+  if (host && (protocol === 'http' || protocol === 'https')) return `${protocol}://${host}`;
+  return new URL(url).origin;
+}
+
 export function createApp(config: Config, chatStream?: ChatStream) {
   const app = new Hono();
+  const allowedOrigins = new Set([new URL(config.site.siteOrigin).origin, ...config.allowedOrigins]);
   app.use('/api/ai/*', async (c, next) => {
     const origin = c.req.header('Origin');
-    const sameOrigin = origin === new URL(c.req.url).origin;
-    if (origin && !sameOrigin && !config.allowedOrigins.includes(origin)) return c.json({ error: { code: 'ORIGIN_DENIED', message: '该网站未获准接入。' } }, 403);
+    const sameOrigin = origin === requestOrigin(c.req.url, c.req.header('X-Forwarded-Host') ?? c.req.header('Host'), c.req.header('X-Forwarded-Proto'));
+    if (origin && !sameOrigin && !allowedOrigins.has(origin)) return c.json({ error: { code: 'ORIGIN_DENIED', message: '该网站未获准接入。' } }, 403);
     await next();
   });
-  app.use('/api/ai/*', cors({ origin: origin => config.allowedOrigins.includes(origin) ? origin : '', allowMethods: ['GET', 'POST', 'OPTIONS'], allowHeaders: ['Content-Type', 'X-Scene-Actions'], maxAge: 600 }));
+  app.use('/api/ai/*', cors({ origin: origin => allowedOrigins.has(origin) ? origin : '', allowMethods: ['GET', 'POST', 'OPTIONS'], allowHeaders: ['Content-Type', 'X-Scene-Actions'], maxAge: 600 }));
   app.get('/api/ai/config', c => { c.header('Cache-Control', 'no-store'); return c.json(publicSiteConfig(config.site)); });
   // 这些计数器刻意保存在进程内：当前服务是单实例小型后端，重启后限流窗口会清空；
   // 多实例部署时必须把限流和并发控制移到共享网关或外部存储，不能把这里当成分布式锁。
