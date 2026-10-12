@@ -21,7 +21,7 @@
 ### Implementation notes
 
 - `npm ci`、`npm run typecheck`、`npm test`、`npm run build`；包单独构建测试和打包。修改协议后更新 tgz 和 lock，不能仅修改包源码。
-- GET `/api/ai/config` 不泄露 instructions、Key 或模型配置。跨域浏览器需要 ALLOWED_ORIGINS 的精确 Origin；OPTIONS 允许 Content-Type / X-Scene-Actions，非法 Origin 返回 403。
+- GET `/api/ai/config` 不泄露 instructions、Key 或模型配置。服务自身 `siteOrigin` 自动允许，其他跨域浏览器来源需要 ALLOWED_ORIGINS 的精确 Origin；通过受信反代的同源请求使用 `X-Forwarded-Host` 与 `X-Forwarded-Proto` 判断公网来源；OPTIONS 允许 Content-Type / X-Scene-Actions，非法 Origin 返回 403。
 - 修改默认网站事实只编辑 src/site.config.json；SiteCard 的 ID、资料和链接由同一服务端配置生成，使用方不复制目录清单。
 
 
@@ -44,8 +44,10 @@
 - 测试仅使用本地模拟上游与虚拟 key，不从开发 `.env` 或 `.sect/` 取真实凭据，不调用公网模型。生产模型联调另行验证。
 - 容器资源预算和功能正常必须分别验证；256 MiB 容器内存及 128 MiB old space 是起始配置，不是已测量的容量承诺。Dockerfile 变更须在 Docker 引擎可用时验证构建和健康检查。
 
-- 新客户端发送 `X-Scene-Actions: v1` 请求头，messages JSON 和原 SSE 协议保持兼容；仅显式协商时 model.ts 附加 SCENE_ACTION_PROMPT，旧客户端禁止输出动作。SceneAction JSON 严格只有 actions，允许 open_scroll/break_glass，最多两项、不得重复、最多一个围栏。仅本轮明确代为操作请求才产生动作，介绍/否定/引用/历史/追问不触发；正文不能提前声称成功。格式补全不允许新增动作，非法或未协商动作以 error 终止；前端仅在 done 后检查当前场景并执行，结果来自页面。部署需要新版前端与后端分别发布，旧后端忽略能力头时仍只能聊天。
+- 新客户端发送 `X-Scene-Actions: v1` 请求头，messages JSON 和原 SSE 协议保持兼容；仅显式协商时 model.ts 附加 SCENE_ACTION_PROMPT，旧客户端禁止输出动作。SceneAction JSON 严格只有 actions，仅允许 break_glass，最多一项、不得重复、最多一个围栏。仅本轮明确代为操作请求才产生动作，介绍/否定/引用/历史/追问不触发；正文不能提前声称成功。格式补全不允许新增动作，非法或未协商动作以 error 终止；前端仅在 done 后检查当前场景并执行，结果来自页面。部署需要新版前端与后端分别发布，旧后端忽略能力头时仍只能聊天。
 
-- `/health` 返回 sceneActions 白名单；SSE ready 仅在 X-Scene-Actions=v1 时返回相同白名单，否则为空数组。发布后须检查该字段，旧版只有 replyProtocol 无法证明已部署场景动作；健康检查不证明真实模型已正确生成动作，仍需单独验证。询问操作能力时应明确说明支持的两项操作，实际动作仍要求本轮明确执行请求。
+- `/health` 返回 sceneActions 白名单；SSE ready 仅在 X-Scene-Actions=v1 时返回相同白名单，否则为空数组。发布后须检查该字段，旧版只有 replyProtocol 无法证明已部署场景动作；健康检查不证明真实模型已正确生成动作，仍需单独验证。询问操作能力时应明确说明支持的打碎玻璃操作，实际动作仍要求本轮明确执行请求。
 
 - GitHub 远程为 `neo-jack/aiPet`，公开仓库、master 主分支；主分支以独立项目初始提交重建，旧历史保存在本机归档。上传默认仅 CI，部署需仓库变量 DEPLOY_ENABLED=true。
+
+- 生产 AI 后端已改为直连 DeepSeek，使用 `deepseek-v4-pro`，`MODEL_THINKING_MODE=disabled`；`SUB2API_*` 只是兼容环境变量名，不代表仍依赖 Sub2API 服务。服务器配置源为 `/opt/100my-page/3dai.env`，本地开发配置独立保存；运行时不读取相邻项目或私密资料目录。旧发布脚本仍连接保留的 Sub2API 网络，网络存在不表示该平台需要启动。

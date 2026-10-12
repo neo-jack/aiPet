@@ -7,13 +7,13 @@ const parseSiteCardFence = (source,streaming) => parseCard(source,streaming,RECO
 const safeMarkdownUrl = value => safeUrl(value,'https://example.com');
 
 test('scene actions require one complete allowlisted marker; prose, nested code and malformed instructions never execute', () => {
-  const valid = '```SceneAction\n{"actions":["open_scroll","break_glass"]}\n```';
-  assert.deepEqual(readSceneActions(valid), ['open_scroll', 'break_glass']);
-  assert.deepEqual(readSceneActions('请打开卷轴并打碎玻璃。'), []);
+  const valid = '```SceneAction\n{"actions":["break_glass"]}\n```';
+  assert.deepEqual(readSceneActions(valid), ['break_glass']);
+  assert.deepEqual(readSceneActions('请打碎玻璃。'), []);
   assert.deepEqual(readSceneActions('````markdown\n' + valid + '\n````'), []);
   assert.deepEqual(readSceneActions(valid + '\n' + valid), []);
   for (let i = 1; i < valid.length; i++) assert.deepEqual(readSceneActions(valid.slice(0, i)), []);
-  for (const payload of ['{}', '{"actions":[]}', '{"actions":["eval"]}', '{"actions":["break_glass","break_glass"]}', '{"actions":["open_scroll"],"selector":"body"}', '{"actions":[null]}']) {
+  for (const payload of ['{}', '{"actions":[]}', '{"actions":["eval"]}', '{"actions":["break_glass","break_glass"]}', '{"actions":["open_scroll"]}', '{"actions":["open_scroll","break_glass"]}', '{"actions":["break_glass"],"selector":"body"}', '{"actions":[null]}']) {
     const invalid = '```SceneAction\n' + payload + '\n```';
     assert.deepEqual(readSceneActions(invalid), []);
     assert.equal(validateReplyFormat(invalid, []).invalid, true);

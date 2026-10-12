@@ -35,7 +35,7 @@ function post(body: unknown = question) {
 }
 
 test('scene action capability is opt-in and uses the real model adapter with validated markers', async (t) => {
-  const actionReply = '我来帮你展开卷轴。\n```SceneAction\n{"actions":["open_scroll"]}\n```\n```FollowUp\n{"questions":["帮我打碎一块玻璃。","卷轴里有哪些笔记？"]}\n```';
+  const actionReply = '我来试着打碎一块玻璃。\n```SceneAction\n{"actions":["break_glass"]}\n```\n```FollowUp\n{"questions":["帮我打碎一块玻璃。","玻璃可以重复打碎吗？"]}\n```';
   const prompts: string[] = [];
   const baseURL = await gateway(t, async (req, res) => {
     let body = '';
@@ -45,10 +45,10 @@ test('scene action capability is opt-in and uses the real model adapter with val
   });
   const configured = { ...config, baseURL, apiKey: 'test-only', model: 'mock-model' };
   const app = createApp(configured, createChatStream(configured));
-  const request = post({ messages: [{ role: 'user', content: '帮我打开卷轴。' }] });
+  const request = post({ messages: [{ role: 'user', content: '帮我打碎一块玻璃。' }] });
   const supported = await (await app.request('/api/ai/chat', { ...request, headers: { ...request.headers, 'X-Scene-Actions': 'v1' } })).text();
   assert.match(supported, /event: done/);
-  assert.match(prompts[0]!, /当前客户端支持以下两种入口场景操作/);
+  assert.match(prompts[0]!, /当前客户端支持以下入口场景操作/);
   const legacy = await (await app.request('/api/ai/chat', request)).text();
   assert.match(legacy, /INVALID_REPLY_FORMAT/);
   assert.doesNotMatch(legacy, /event: done/);

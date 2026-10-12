@@ -25,7 +25,7 @@ import '@my-page/ai-pet/style.css';
 
 主入口导出 `usePaperPet(enabled, onSceneActions, options)`、`PaperPetReply`、`PaperPetTrigger`。现有场景可以继续提供纸纹/木纹、位置和 portal。面板传入 hook 返回的 `sites`、`siteOrigin` 与其他状态。3D 模型只消费状态，不控制相机。
 
-场景操作默认关闭；传 `sceneActions: true` 才协商协议。具体行为必须由宿主的白名单回调实现，只有成功 done 后才提交；离场/卸载/切换服务地址中止请求。关闭面板保留当前生成。
+场景动作仅支持 `break_glass`（打碎一块玻璃），每轮最多一项。场景操作默认关闭；传 `sceneActions: true` 才协商协议。具体行为必须由宿主的白名单回调实现，只有成功 done 后才提交；离场/卸载/切换服务地址中止请求。关闭面板保留当前生成。
 
 纯协议、网络与卡片工具分别通过 `/protocol`、`/client`、`/site-cards` 导出，后端只导入 `/protocol`。
 

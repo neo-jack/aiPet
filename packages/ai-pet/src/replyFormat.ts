@@ -8,7 +8,7 @@ export const REPLY_PROTOCOL = 'markdown-sites-followups-v1';
 export class ReplyFormatError extends Error {
   constructor() { super('Invalid reply format'); }
 }
-export const SCENE_ACTIONS = ['open_scroll', 'break_glass'] as const;
+export const SCENE_ACTIONS = ['break_glass'] as const;
 export type SceneAction = typeof SCENE_ACTIONS[number];
 export type ReplyMarker = 'SiteCard' | 'FollowUp' | 'SceneAction';
 export type ReplyBlock =
@@ -40,7 +40,7 @@ export function parseReplyFence(source: string, streaming: boolean): ReplyBlock 
     if (Object.keys(record).length !== 1) return { marker, kind: 'invalid' };
     if (marker === 'SceneAction') {
       const actions = record.actions;
-      return Array.isArray(actions) && actions.length >= 1 && actions.length <= 2
+      return Array.isArray(actions) && actions.length >= 1 && actions.length <= SCENE_ACTIONS.length
         && actions.every((action): action is SceneAction => SCENE_ACTIONS.includes(action))
         && new Set(actions).size === actions.length
         ? { marker, kind: 'valid', actions } : { marker, kind: 'invalid' };

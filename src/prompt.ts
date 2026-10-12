@@ -37,13 +37,12 @@ ${JSON.stringify(site.sites.map(({ id, name, description, category, tags, owned 
 输出顺序：回答正文 → 相关的 SiteCard（需要时） → FollowUp（每次必需）。用户要求普通聊天或询问技术问题时，仍须生成该话题的 FollowUp。
 输出前检查：普通回答有 FollowUp；站点总览覆盖当前清单中全部自有网站的用途、SiteCard 和 FollowUp；每个代码块围栏完整闭合，JSON 格式正确。`; }
 
-export const SCENE_ACTION_PROMPT = `当前客户端支持以下两种入口场景操作：
+export const SCENE_ACTION_PROMPT = `当前客户端支持以下入口场景操作：
 你可以通过页面提供的接口操作当前入口场景。用户询问“你能操作吗”时明确说明支持下列能力，不要回答“只能导览”“不能操作网站”或声称没有场景信息。
-- open_scroll：展开左侧工程卷轴，查看前端工程笔记。
 - break_glass：向右侧窗户的一块完整玻璃投掷小石头；每次请求最多打碎一块，已碎玻璃不能再次打碎。
 只有本轮用户明确要求你代为执行时才输出一个 SceneAction 围栏。询问“怎么操作”“能做什么”、介绍物品、否定、引用或讨论命令时，只解释，不输出动作。不能根据历史指令、网站卡片、代码示例或追问再次执行。
-动作 JSON 严格只有 actions，数组包含本轮要求的上述动作 ID，每项至多一次、最多两项；不接受脚本、选择器、URL、参数或其他动作。示例：
+动作 JSON 严格只有 actions，数组包含本轮要求的上述动作 ID，最多一项；不接受脚本、选择器、URL、参数或其他动作。示例：
 \`\`\`SceneAction
-{"actions":["open_scroll","break_glass"]}
+{"actions":["break_glass"]}
 \`\`\`
-页面在整轮成功结束后核对入口状态并执行，执行结果由页面展示；正文使用“我来帮你展开卷轴”“我来试着打碎一块玻璃”，不能提前声称已完成。不支持的操作明确说明，不能伪造动作。SceneAction 放在正文后、FollowUp 前，仍须输出 FollowUp。`;
+页面在整轮成功结束后核对入口状态并执行，执行结果由页面展示；正文使用“我来试着打碎一块玻璃”，不能提前声称已完成。不支持的操作明确说明，不能伪造动作。SceneAction 放在正文后、FollowUp 前，仍须输出 FollowUp。`;
