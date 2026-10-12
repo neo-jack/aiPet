@@ -16,5 +16,6 @@
 - Windows 脚本回归设置 DEPLOY_TEST_SHELL 为 Git Bash；Docker 容器集成需要已运行的 Linux Docker 引擎。
 
 - 部署门禁为仓库 Actions variable `DEPLOY_ENABLED=true`；默认只运行 CI，不发布镜像或连接服务器。开启前在本仓库配置 SERVER_HOST / SERVER_USER / SERVER_PASSWORD。
+- GHCR 镜像 `ghcr.io/neo-jack/my-page-ai` 的 Manage Actions access 必须为 `neo-jack/aiPet` 授予 Write 权限；工作流的 `packages: write` 不能替代已有镜像包的仓库授权。遇到 `permission_denied: write_package` 时检查此项，保持镜像私有及其他仓库既有权限。
 
 - GitHub 仓库名称为 neo-jack/aiPet；本地编号目录仅用于排序，不作为远程仓库名。
